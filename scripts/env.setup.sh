@@ -5,5 +5,6 @@ files="services/database/postgres/.env" "services/database/postgres/migrations/f
 for file in "${files[@]}"
 do
   echo "Enter content for file: $file (press Control+D to finish input)"
+  touch "$file"
   cat > "$file"
 done
