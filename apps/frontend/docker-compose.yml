@@ -1,0 +1,20 @@
+name: "studyum"
+
+networks:
+  studyum-backend_shared:
+    external: true
+
+
+
+services:
+  web:
+    image: studyum-web:latest
+    restart: on-failure
+    ports:
+      - 80:80
+      - 443:443
+    env_file:
+      - "web/.env"
+    networks:
+      - studyum-backend_shared
+

@@ -1,0 +1,73 @@
+name: "studyum-backend"
+
+networks:
+  studyum-kafka_shared:
+    external: true
+  studyum-database_shared:
+    external: true
+  shared:
+    driver: bridge
+
+
+
+services:
+  auth:
+    image: studyum-auth:latest
+    restart: on-failure
+    ports:
+      - 0100:0100
+      - 0101:0101
+    env_file:
+      - "auth/.env"
+    networks:
+      - shared
+      - studyum-database_shared
+      - studyum-kafka_shared
+
+
+  studyplaces:
+    image: studyum-studyplaces:latest
+    restart: on-failure
+    depends_on:
+      auth:
+        condition: service_healthy
+    ports:
+      - 0200:0200
+      - 0201:0201
+    env_file:
+      - "studyplaces/.env"
+    networks:
+      - shared
+      - studyum-database_shared
+
+
+  types_registry:
+    image: studyum-types_registry:latest
+    restart: on-failure
+    depends_on:
+      studyplaces:
+        condition: service_healthy
+    ports:
+      - 0300:0300
+      - 0301:0301
+    env_file:
+      - "types_registry/.env"
+    networks:
+      - shared
+      - studyum-database_shared
+
+
+  schedule:
+    image: studyum-schedule:latest
+    restart: on-failure
+    depends_on:
+      types_registry:
+        condition: service_healthy
+    ports:
+      - 0400:0400
+      - 0401:0401
+    env_file:
+      - "schedule/.env"
+    networks:
+      - shared
+      - studyum-database_shared

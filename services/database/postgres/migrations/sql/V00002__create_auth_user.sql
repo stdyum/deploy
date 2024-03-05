@@ -1,0 +1,3 @@
+CREATE USER auth WITH PASSWORD '${auth_password}';
+GRANT ALL PRIVILEGES ON DATABASE auth TO auth;
+GRANT ALL ON SCHEMA public TO auth;

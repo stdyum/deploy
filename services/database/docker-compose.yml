@@ -1,0 +1,86 @@
+name: "studyum-database"
+
+networks:
+  shared:
+    driver: bridge
+  internal-postgres:
+    driver: bridge
+
+
+
+services:
+  postgres:
+    image: postgres:latest
+    restart: on-failure
+    ports:
+      - 32:5432
+    env_file:
+      - "postgres/.env"
+    volumes:
+      - ./postgres/data:/var/lib/postgresql/data
+    networks:
+      - internal-postgres
+      - shared
+
+
+  postgres-migrations:
+    image: flyway/flyway:latest
+    command: "migrate"
+    volumes:
+      - ./postgres/migrations/sql:/flyway/sql
+      - ./postgres/migrations/flyway.conf:/flyway/conf/flyway.conf
+    depends_on:
+      - postgres
+    networks:
+      - internal-postgres
+
+
+  redis:
+    image: redis:latest
+    restart: on-failure
+    ports:
+      - 2884:6379
+    env_file:
+      - "redis/.env"
+    volumes:
+      - ./redis/data:/data
+    networks:
+      - shared
+    command: |
+      /bin/sh -c "redis-server --requirepass $$REDIS_PASSWORD"
+
+
+  scylla:
+    image: scylladb/scylla:latest
+    restart: no
+    ports:
+      - 9042:9042
+      - 9160:9160
+      - 10000:10000
+    env_file:
+      - "scylla/.env"
+    volumes:
+      - "./scylla/scylla.yaml:/etc/scylla/scylla.yaml"
+      - "./scylla/cassandra-rackdc.properties:/etc/scylla/cassandra-rackdc.properties"
+      - "./scylla/data:/var/lib/scylla/data"
+    command: --smp 1 --memory 500M --overprovisioned 1 --api-address 0.0.0.0
+    networks:
+      - shared
+    healthcheck:
+      test: cqlsh -u $$SCYLLA_USER -p $$SCYLLA_PASSWORD -e "DESCRIBE KEYSPACES;"
+      interval: 1s
+      retries: 120
+
+
+  scylla-migrations:
+    image: flyway/flyway:latest
+    command: "migrate"
+    volumes:
+      - ./scylla/migrations/sql:/flyway/sql
+      - ./scylla/migrations/driver.jar:/flyway/drivers/cassandra.jar
+      - ./scylla/migrations/flyway.conf:/flyway/conf/flyway.conf
+    depends_on:
+      scylla:
+        condition: service_healthy
+    networks:
+      - shared
