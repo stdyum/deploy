@@ -1,0 +1,1 @@
+CREATE USER types_registry WITH PASSWORD '${types_registry_password}';

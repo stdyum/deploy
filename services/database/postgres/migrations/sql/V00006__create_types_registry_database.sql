@@ -1,0 +1,1 @@
+CREATE DATABASE types_registry OWNER types_registry;
