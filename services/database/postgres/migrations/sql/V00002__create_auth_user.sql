@@ -1,5 +1,5 @@
 CREATE USER auth WITH PASSWORD '${auth_password}';
 
-\c auth;
+set search_path = "auth";
 GRANT ALL PRIVILEGES ON DATABASE auth TO auth;
 GRANT ALL ON SCHEMA auth.public TO auth;
